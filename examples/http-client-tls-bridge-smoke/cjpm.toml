@@ -1,0 +1,12 @@
+[package]
+  cjc-version = "1.0.0"
+  version = "0.1.0"
+  name = "jinguissl_http_client_tls_bridge_smoke"
+  output-type = "executable"
+  src-dir = "src"
+  compile-option = "-Woff unused"
+  description = "single-import HTTP client TLS gate/startup/verified-session smoke for jinguissl_bridge"
+
+[dependencies]
+  [dependencies.jinguissl_bridge]
+    path = "../.."

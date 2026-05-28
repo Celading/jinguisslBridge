@@ -1,0 +1,49 @@
+[package]
+  cjc-version = "1.0.0"
+  version = "0.1.0"
+  name = "jinguissl_bridge"
+  output-type = "dynamic"
+  src-dir = "src/jinguissl_bridge"
+  compile-option = "-Woff unused"
+  description = "Dynamic bridge for JinguiSSL contract and core integration"
+  include = ["src"]
+
+[dependencies]
+  jinguissl_core = { git = "git@github:Celading/jinguisslCore", branch = "main" }
+  jinguissl_contract = { git = "git@github:Celading/JinguiSSL", branch = "main" }
+
+[target.aarch64-apple-darwin]
+  compile-option = "--dy-std"
+  override-compile-option = "--dy-std"
+[target.aarch64-apple-darwin.bin-dependencies]
+  path-option = ["${CANGJIE_STDX_PATH}/cj_stdx_darwin_aarch64_llvm/dynamic/stdx"]
+
+[target.x86_64-apple-darwin]
+  compile-option = "--dy-std"
+  override-compile-option = "--dy-std"
+[target.x86_64-apple-darwin.bin-dependencies]
+  path-option = ["${CANGJIE_STDX_PATH}/cj_stdx_darwin_x86_64_llvm/dynamic/stdx"]
+
+[target.x86_64-unknown-linux-gnu]
+  compile-option = "--dy-std -ldl"
+  override-compile-option = "--dy-std -ldl"
+[target.x86_64-unknown-linux-gnu.bin-dependencies]
+  path-option = ["${CANGJIE_STDX_PATH}/linux_x86_64_llvm/dynamic/stdx"]
+
+[target.aarch64-unknown-linux-gnu]
+  compile-option = "--dy-std -ldl"
+  override-compile-option = "--dy-std -ldl"
+[target.aarch64-unknown-linux-gnu.bin-dependencies]
+  path-option = ["${CANGJIE_STDX_PATH}/linux_aarch64_llvm/dynamic/stdx"]
+
+[target.aarch64-linux-ohos]
+  compile-option = "-B \"${DEVECO_CANGJIE_HOME}/compiler/third_party/llvm/bin\" -B \"${DEVECO_CANGJIE_HOME}/musl/usr/lib/aarch64-linux-ohos\" -L \"${DEVECO_CANGJIE_HOME}/musl/usr/lib/aarch64-linux-ohos\" --sysroot \"${DEVECO_CANGJIE_HOME}/musl\" --dy-std -ldl"
+  override-compile-option = "-B \"${DEVECO_CANGJIE_HOME}/compiler/third_party/llvm/bin\" -B \"${DEVECO_CANGJIE_HOME}/musl/usr/lib/aarch64-linux-ohos\" -L \"${DEVECO_CANGJIE_HOME}/musl/usr/lib/aarch64-linux-ohos\" --sysroot \"${DEVECO_CANGJIE_HOME}/musl\" --dy-std -ldl"
+[target.aarch64-linux-ohos.bin-dependencies]
+  path-option = ["${CANGJIE_STDX_PATH}/linux_ohos_aarch64_cjnative/dynamic/stdx"]
+
+[target.aarch64-linux-ohos-cjnative]
+  compile-option = "--dy-std -ldl"
+  override-compile-option = "--dy-std -ldl"
+[target.aarch64-linux-ohos-cjnative.bin-dependencies]
+  path-option = ["${CANGJIE_STDX_PATH}/linux_ohos_aarch64_cjnative/dynamic/stdx"]
