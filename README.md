@@ -34,18 +34,25 @@
 - SSH KEX / transcript / startup helper
 - 内置桥接样例，便于直接验证集成方式
 
+## 当前分层说明
+
+本仓库当前约 5.5k 行桥接实现直接封装 `JinguiSSL-contract` 的 `live.*` 表面，并将其与桥接逻辑耦合在一起。
+
+因此 `JinguiSSL-bridge` 当前**不应被视为独立于 contract/live 之外的密码学加固层**。它的安全边界与 contract 和 core 一致。如果底层私钥操作不具备恒定时间保证，bridge 层也不应被当作独立的安全硬化层使用。
+
+后续 live 层重构完成后，bridge 的依赖结构会随之调整。
+
 ## 快速开始
 
 ### 依赖
 
-当前 GitCode hosted mirror 已可直接引用。  
-如果你是在同一工作区里并排维护三个仓，继续使用 sibling-path 也没有问题；但对外消费时，推荐直接使用下面这组 hosted 依赖。
+公开仓库默认使用远程 Git 依赖；本地 sibling checkout 仅建议作为开发时的临时覆盖。
 
 ```toml
 [dependencies]
-jinguissl_core = { git = "git@gitcode:CjKu/Jingui-Core.git", branch = "main" }
-jinguissl_contract = { git = "git@gitcode:cinyu/jinguiSSL.git", branch = "main" }
-jinguissl_bridge = { git = "git@gitcode:CjKu/JinguiSSLBridge.git", branch = "main" }
+jinguissl_core = { git = "https://gitcode.com/CjKu/JinguiCore.git" }
+jinguissl_contract = { git = "https://gitcode.com/cinyu/jinguiSSL.git" }
+jinguissl_bridge = { git = "https://gitcode.com/CjKu/JinguiSSLBridge.git" }
 ```
 
 ### 示例：读取 bridge 自描述信息

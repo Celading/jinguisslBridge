@@ -1,3 +1,5 @@
 version = 0
 
 [requires]
+  jinguissl_core = {git = "https://gitcode.com/CjKu/JinguiCore.git", commitId = "137bc10162990af60d637571f1331abcc2dfa4dd"}
+  jinguissl_contract = {git = "https://gitcode.com/cinyu/jinguiSSL.git", commitId = "c450144393a1cfcb8e97d313098230b354de4d3e"}
