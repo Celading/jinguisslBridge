@@ -1,7 +1,7 @@
 package jinguissl_bridge
 
 import std.collection.ArrayList
-import jinguissl_core.jinguissl.crypto.ed25519.{ed25519Sign, ed25519Verify, ed25519PublicKeyFromSeed}
+import jinguissl_core.crypto.ed25519.{ed25519Sign, ed25519Verify, ed25519PublicKeyFromSeed}
 
 /**
  * Ed25519 FFI barrier.

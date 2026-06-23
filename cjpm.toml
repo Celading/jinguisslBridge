@@ -10,7 +10,7 @@
 
 [dependencies]
   jinguissl_core = { git = "https://gitcode.com/CjKu/JinguiCore.git" }
-  jinguissl_contract = { git = "https://gitcode.com/cinyu/jinguiSSL.git" }
+  jinguissl = { git = "https://gitcode.com/cinyu/jinguiSSL.git" }
 
 [target.aarch64-apple-darwin]
   compile-option = "--dy-std"

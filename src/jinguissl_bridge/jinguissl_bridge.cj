@@ -1,24 +1,24 @@
 package jinguissl_bridge
 
 import std.collection.HashMap
-import jinguissl_core.jinguissl.crypto.aes.*
-import jinguissl_core.jinguissl.crypto.bignum.BigNum
-import jinguissl_core.jinguissl.crypto.chacha20.*
-import jinguissl_core.jinguissl.crypto.compliance.*
-import jinguissl_core.jinguissl.crypto.digest.{hmac, sha256, sha384, sha512, HashAlgorithm}
-import jinguissl_core.jinguissl.crypto.ecc.*
-import jinguissl_core.jinguissl.crypto.ed25519.*
-import jinguissl_core.jinguissl.crypto.error.*
-import jinguissl_core.jinguissl.crypto.rsa.*
-import jinguissl_core.jinguissl.crypto.sm3.sm3
-import jinguissl_core.jinguissl.crypto.sm4.{sm4Encrypt, sm4Decrypt}
-import jinguissl_core.jinguissl.crypto.ssh.*
-import jinguissl_core.jinguissl.crypto.tls.*
-import jinguissl_core.jinguissl.crypto.utils.*
-import jinguissl_core.jinguissl.crypto.x25519.*
-import jinguissl_core.jinguissl.crypto.x509.*
-import jinguissl_contract.jinguissl.contract.{contractSmCapability, contractTrySmCapability, contractRequireSmCapability, ContractSmCapability, ContractSmCapabilityOutcome}
-import jinguissl_contract.jinguissl.live.*
+import jinguissl_core.crypto.aes.*
+import jinguissl_core.crypto.bignum.BigNum
+import jinguissl_core.crypto.chacha20.*
+import jinguissl_core.crypto.compliance.*
+import jinguissl_core.crypto.digest.{hmac, sha256, sha384, sha512, HashAlgorithm}
+import jinguissl_core.crypto.ecc.*
+import jinguissl_core.crypto.ed25519.*
+import jinguissl_core.crypto.error.*
+import jinguissl_core.crypto.rsa.*
+import jinguissl_core.crypto.sm3.sm3
+import jinguissl_core.crypto.sm4.{sm4Encrypt, sm4Decrypt}
+import jinguissl_core.crypto.ssh.*
+import jinguissl_core.crypto.tls.*
+import jinguissl_core.crypto.utils.*
+import jinguissl_core.crypto.x25519.*
+import jinguissl_core.crypto.x509.*
+import jinguissl.contract.{contractSmCapability, contractTrySmCapability, contractRequireSmCapability, ContractSmCapability, ContractSmCapabilityOutcome}
+import jinguissl.live.*
 
 public let BRIDGE_VERSION: String = "0.1.0"
 
@@ -619,6 +619,25 @@ public class BridgeHttpServerTlsConfigRequest {
         this.privateKeyPem = privateKeyPem
         this.alpnProtocols = alpnProtocols.clone()
         this.requireHttp2Alpn = requireHttp2Alpn
+    }
+}
+
+public class BridgeHttpServerAttachPlanRequest {
+    public let tls: BridgeHttpServerTlsConfigRequest
+    public let profile: ContractHttpSshStartupProfile
+    public let requestedAesEngine: ContractAesEngineKind
+    public let aesBackendHint: String
+
+    public init(
+        tls: BridgeHttpServerTlsConfigRequest,
+        profile!: ContractHttpSshStartupProfile = ContractHttpSshStartupProfile.HttpServerLibrary,
+        requestedAesEngine!: ContractAesEngineKind = ContractAesEngineKind.Auto,
+        aesBackendHint!: String = ""
+    ) {
+        this.tls = tls
+        this.profile = profile
+        this.requestedAesEngine = requestedAesEngine
+        this.aesBackendHint = aesBackendHint.trimAscii()
     }
 }
 
@@ -2582,6 +2601,43 @@ public func bridgeTryPrepareHttpServerLibraryStartupRequest(
     )
 }
 
+public func bridgePlanHttpServerAttachRequest(
+    request: BridgeHttpServerAttachPlanRequest
+): ContractHttpServerAttachPlan {
+    contractPlanHttpServerAttachRequest(
+        ContractHttpServerLibraryStartupRequest(
+            bridgeToContractHttpServerTlsConfigRequest(request.tls),
+            profile: request.profile,
+            requestedAesEngine: request.requestedAesEngine,
+            aesBackendHint: request.aesBackendHint
+        )
+    )
+}
+
+public func bridgePlanHttpServerAttach(
+    certificateChainPem: String,
+    privateKeyPem: String,
+    alpnProtocols!: Array<String> = ["h2", "http/1.1"],
+    requireHttp2Alpn!: Bool = true,
+    profile!: ContractHttpSshStartupProfile = ContractHttpSshStartupProfile.HttpServerLibrary,
+    requestedAesEngine!: ContractAesEngineKind = ContractAesEngineKind.Auto,
+    aesBackendHint!: String = ""
+): ContractHttpServerAttachPlan {
+    bridgePlanHttpServerAttachRequest(
+        BridgeHttpServerAttachPlanRequest(
+            BridgeHttpServerTlsConfigRequest(
+                certificateChainPem,
+                privateKeyPem,
+                alpnProtocols: alpnProtocols,
+                requireHttp2Alpn: requireHttp2Alpn
+            ),
+            profile: profile,
+            requestedAesEngine: requestedAesEngine,
+            aesBackendHint: aesBackendHint
+        )
+    )
+}
+
 public func bridgePrepareHttpClientLibraryStartupRequest(
     request: BridgeHttpClientLibraryStartupRequest
 ): ContractHttpClientLibraryStartupBundle {
@@ -3084,6 +3140,12 @@ public func bridgeTls13BuildHttpServerFlightX25519Request(
             policy: request.policy
         )
     )
+}
+
+public func bridgeBuildHttpServerAttachResultFromTls13Flight(
+    serverFlight: ContractTls13HttpServerFlight
+): ContractHttpServerAttachResult {
+    contractBuildHttpServerAttachResultFromTls13Flight(serverFlight)
 }
 
 public func bridgeTls13BuildHttpServerFlightX25519Rsa(

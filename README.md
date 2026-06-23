@@ -51,7 +51,7 @@
 ```toml
 [dependencies]
 jinguissl_core = { git = "https://gitcode.com/CjKu/JinguiCore.git" }
-jinguissl_contract = { git = "https://gitcode.com/cinyu/jinguiSSL.git" }
+jinguissl = { git = "https://gitcode.com/cinyu/jinguiSSL.git" }
 jinguissl_bridge = { git = "https://gitcode.com/CjKu/JinguiSSLBridge.git" }
 ```
 
@@ -84,6 +84,7 @@ cjpm build
 ```
 
 如需验证样例，可分别进入对应 `examples/*` 目录执行 `cjpm build`。
+如需运行 smoke 输出，可分别进入对应 `examples/*` 目录执行 `cjpm run`。
 
 ## 目录结构
 

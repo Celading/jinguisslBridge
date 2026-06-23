@@ -1,8 +1,8 @@
 package jinguissl_bridge
 
 import std.collection.ArrayList
-import jinguissl_core.jinguissl.crypto.bignum.BigNum
-import jinguissl_core.jinguissl.crypto.ecc.*
+import jinguissl_core.crypto.bignum.BigNum
+import jinguissl_core.crypto.ecc.*
 
 /**
  * ECC (P-256) FFI barrier.

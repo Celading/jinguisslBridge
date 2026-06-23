@@ -2,8 +2,8 @@ package jinguissl_bridge
 
 import std.collection.ArrayList
 import std.math.numeric.BigInt
-import jinguissl_core.jinguissl.crypto.bignum.BigNum
-import jinguissl_core.jinguissl.crypto.rsa.{RsaPublicKey, RsaPrivateKey, rsaSignPkcs1v15, rsaVerifyPkcs1v15}
+import jinguissl_core.crypto.bignum.BigNum
+import jinguissl_core.crypto.rsa.{RsaPublicKey, RsaPrivateKey, rsaSignPkcs1v15, rsaVerifyPkcs1v15}
 
 /**
  * RSA FFI barrier.

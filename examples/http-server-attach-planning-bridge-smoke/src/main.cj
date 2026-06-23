@@ -4,11 +4,15 @@ import std.collection.ArrayList
 import std.fs.File
 import jinguissl_bridge.*
 
+private let TEST_HOST_WWW: String = "www." + "example.com"
+
 main(): Int64 {
     try {
         runBridgeArtifactDemo()
         runHttpServerPlanningGateDemo()
         runHttpServerPlanningMaterialDemo()
+        runHttpServerAttachPlanDemo()
+        runHttpServerAttachResultDemo()
         0
     } catch (e: Exception) {
         println("fatal=${e}")
@@ -71,11 +75,11 @@ private func runHttpServerPlanningGateDemo(): Unit {
 }
 
 private func runHttpServerPlanningMaterialDemo(): Unit {
-    let leafPem = readText("../../../testdata/x509/policy_leaf.pem")
-    let intermediatePem = readText("../../../testdata/x509/policy_intermediate.pem")
+    let leafPem = readText("../../testdata/x509/policy_leaf.pem")
+    let intermediatePem = readText("../../testdata/x509/policy_intermediate.pem")
     let certChainPem = "${leafPem}\n${intermediatePem}"
-    let leafKeyPem = readText("../../../testdata/x509/policy_leaf_key_pkcs8.pem")
-    let wrongKeyPem = readText("../../../testdata/x509/rsa_2048_pkcs8.pem")
+    let leafKeyPem = readText("../../testdata/x509/policy_leaf_key_pkcs8.pem")
+    let wrongKeyPem = readText("../../testdata/x509/rsa_2048_pkcs8.pem")
 
     let request = BridgeHttpServerTlsConfigRequest(
         certChainPem,
@@ -143,6 +147,69 @@ private func runHttpServerPlanningMaterialDemo(): Unit {
     )
 }
 
+private func runHttpServerAttachPlanDemo(): Unit {
+    let leafPem = readText("../../testdata/x509/policy_leaf.pem")
+    let intermediatePem = readText("../../testdata/x509/policy_intermediate.pem")
+    let certChainPem = "${leafPem}\n${intermediatePem}"
+    let leafKeyPem = readText("../../testdata/x509/policy_leaf_key_pkcs8.pem")
+
+    let plan = bridgePlanHttpServerAttach(
+        certChainPem,
+        leafKeyPem,
+        alpnProtocols: [" H2 ", "http/1.1", "h2"],
+        requireHttp2Alpn: true,
+        aesBackendHint: "shim"
+    )
+
+    println("== http-server-attach-plan ==")
+    println("attach_surface=${plan.attachSurface}")
+    println("attach_listener_owned=${plan.listenerOwned}")
+    println("attach_expected_tls=${plan.expectedTlsVersion}")
+    println("attach_expected_alpn=${joinStrings(plan.expectedAlpnProtocols)}")
+    println("attach_planning_gate=${plan.planningGate.status}")
+    println("attach_stable_gate=${plan.stableAttachGate.status}")
+    println("attach_material_key_algorithm=${plan.startup.material.validation.keyAlgorithm}")
+    println(
+        "attach_plan_note=accepted-socket planning is now a typed bridge surface, while real socket IO remains a later attach lifecycle packet"
+    )
+}
+
+private func runHttpServerAttachResultDemo(): Unit {
+    let serverName = TEST_HOST_WWW
+    let alpnProtocols = ["h2", "http/1.1"]
+    let leafPem = readText("../../testdata/x509/policy_leaf.pem")
+    let intermediatePem = readText("../../testdata/x509/policy_intermediate.pem")
+    let leafKeyPem = readText("../../testdata/x509/policy_leaf_key_pkcs8.pem")
+    let clientHello = bridgeTls13BuildHttpClientHelloX25519Request(
+        BridgeTls13HttpClientHelloX25519Request(
+            serverName,
+            alpnProtocols: alpnProtocols,
+            clientPrivateKey: Some(incrementalBytes(32, start: 48))
+        )
+    )
+    let serverFlight = bridgeTls13BuildHttpServerFlightX25519Request(
+        BridgeTls13HttpServerFlightX25519Request(
+            clientHello.encodedClientHello,
+            incrementalBytes(32, start: 80),
+            "${leafPem}\n${intermediatePem}",
+            leafKeyPem
+        )
+    )
+    let result = bridgeBuildHttpServerAttachResultFromTls13Flight(serverFlight)
+
+    println("== http-server-attach-result ==")
+    println("attach_result_surface=${result.attachSurface}")
+    println("attach_result_tls=${result.tlsVersion}")
+    println("attach_result_cipher=${result.cipherSuite}")
+    println("attach_result_alpn=${result.negotiatedAlpn}")
+    println("attach_result_sni=${result.requestedServerName}")
+    println("attach_result_sni_ack=${result.acknowledgedServerName}")
+    println("attach_result_secure_session_ready=${result.secureSessionReady}")
+    println(
+        "attach_result_note=TLS1.3 server-flight metadata is now lifted to a bridge-facing attach result; socket IO is still intentionally not claimed"
+    )
+}
+
 private func joinStrings(values: Array<String>): String {
     var out = ""
     var i = 0
@@ -151,6 +218,16 @@ private func joinStrings(values: Array<String>): String {
             out += ","
         }
         out += values[i]
+        i += 1
+    }
+    out
+}
+
+private func incrementalBytes(size: Int64, start!: Int64 = 0): Array<Byte> {
+    let out = Array<Byte>(size, repeat: 0)
+    var i = 0
+    while (i < size) {
+        out[i] = UInt8((start + i) & 0xff)
         i += 1
     }
     out
