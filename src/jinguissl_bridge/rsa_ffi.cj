@@ -2,8 +2,9 @@ package jinguissl_bridge
 
 import std.collection.ArrayList
 import std.math.numeric.BigInt
-import jinguissl_core.jinguissl.crypto.bignum.BigNum
-import jinguissl_core.jinguissl.crypto.rsa.{RsaPublicKey, RsaPrivateKey, rsaSignPkcs1v15, rsaVerifyPkcs1v15}
+import jinguissl_core.crypto.bignum.BigNum
+import jinguissl_core.crypto.error.CryptoException
+import jinguissl_core.crypto.rsa.{RsaPublicKey, RsaPrivateKey, rsaSignPkcs1v15, rsaVerifyPkcs1v15}
 
 /**
  * RSA FFI barrier.
@@ -12,7 +13,7 @@ import jinguissl_core.jinguissl.crypto.rsa.{RsaPublicKey, RsaPrivateKey, rsaSign
  *   0  = success
  *  -1  = bad input
  *  -2  = output buffer too small
- *  -3  = crypto error (verify failed)
+ *  -3  = crypto / parse error (verify failed)
  *
  * PEM buffers are expected to be null-terminated C strings.
  */
@@ -23,17 +24,25 @@ public func rsa_sign_sha256(
     pem: CPointer<UInt8>, pemLen: Int64,
     sigOut: CPointer<UInt8>, sigOutLen: CPointer<Int64>
 ): Int32 {
-    unsafe {
-        if (msg.isNull() || pem.isNull() || sigOut.isNull() || sigOutLen.isNull()) { return -1 }
-        if (msgLen < 0 || pemLen < 1) { return -1 }
-        let msgBytes = ptrToBytes(msg, msgLen)
-        let pemStr = ptrToString(pem, pemLen)
-        let privKey = parseRsaPrivateKeyPkcs8Pem(pemStr)
-        let sig = rsaSignPkcs1v15(privKey, msgBytes)
-        if (sig.size > sigOutLen.read()) { return -2 }
-        bytesToPtr(sig, sigOut)
-        sigOutLen.write(sig.size)
-        0
+    try {
+        unsafe {
+            if (msg.isNull() || pem.isNull() || sigOut.isNull() || sigOutLen.isNull()) { return -1 }
+            if (msgLen < 0 || pemLen < 1) { return -1 }
+            let msgBytes = ptrToBytes(msg, msgLen)
+            let pemStr = ptrToString(pem, pemLen)
+            let privKey = parseRsaPrivateKeyPkcs8Pem(pemStr)
+            let sig = rsaSignPkcs1v15(privKey, msgBytes)
+            let sigCapacity = sigOutLen.read()
+            if (sigCapacity < 0) { return -1 }
+            if (sig.size > sigCapacity) { return -2 }
+            bytesToPtr(sig, sigOut)
+            sigOutLen.write(sig.size)
+            0
+        }
+    } catch (_: CryptoException) {
+        -3
+    } catch (_: Exception) {
+        -3
     }
 }
 
@@ -44,15 +53,21 @@ public func rsa_verify_sha256(
     modulus: CPointer<UInt8>, modulusLen: Int64,
     exponent: CPointer<UInt8>, exponentLen: Int64
 ): Int32 {
-    unsafe {
-        if (msg.isNull() || sig.isNull() || modulus.isNull() || exponent.isNull()) { return -1 }
-        if (msgLen < 0 || sigLen < 1 || modulusLen < 1 || exponentLen < 1) { return -1 }
-        let msgBytes = ptrToBytes(msg, msgLen)
-        let sigBytes = ptrToBytes(sig, sigLen)
-        let n = BigNum.fromBytesBE(ptrToBytes(modulus, modulusLen))
-        let e = BigNum.fromBytesBE(ptrToBytes(exponent, exponentLen))
-        let pubKey = RsaPublicKey(n, e)
-        if (rsaVerifyPkcs1v15(pubKey, msgBytes, sigBytes)) { 0 } else { -3 }
+    try {
+        unsafe {
+            if (msg.isNull() || sig.isNull() || modulus.isNull() || exponent.isNull()) { return -1 }
+            if (msgLen < 0 || sigLen < 1 || modulusLen < 1 || exponentLen < 1) { return -1 }
+            let msgBytes = ptrToBytes(msg, msgLen)
+            let sigBytes = ptrToBytes(sig, sigLen)
+            let n = BigNum.fromBytesBE(ptrToBytes(modulus, modulusLen))
+            let e = BigNum.fromBytesBE(ptrToBytes(exponent, exponentLen))
+            let pubKey = RsaPublicKey(n, e)
+            if (rsaVerifyPkcs1v15(pubKey, msgBytes, sigBytes)) { 0 } else { -3 }
+        }
+    } catch (_: CryptoException) {
+        -3
+    } catch (_: Exception) {
+        -3
     }
 }
 
@@ -62,21 +77,28 @@ public func rsa_pubkey_from_pkcs8(
     nOut: CPointer<UInt8>, nOutLen: CPointer<Int64>,
     eOut: CPointer<UInt8>, eOutLen: CPointer<Int64>
 ): Int32 {
-    unsafe {
-        if (pem.isNull() || nOut.isNull() || nOutLen.isNull() || eOut.isNull() || eOutLen.isNull()) { return -1 }
-        if (pemLen < 1) { return -1 }
-        let pemStr = ptrToString(pem, pemLen)
-        let pubKey = parseRsaPublicKeyPkcs1Pem(pemStr)
-        let nBytes = pubKey.modulus.toBytesBE()
-        let eBytes = pubKey.exponent.toBytesBE()
-        let nLen = nOutLen.read()
-        let eLen = eOutLen.read()
-        if (nBytes.size > nLen || eBytes.size > eLen) { return -2 }
-        bytesToPtr(nBytes, nOut)
-        nOutLen.write(nBytes.size)
-        bytesToPtr(eBytes, eOut)
-        eOutLen.write(eBytes.size)
-        0
+    try {
+        unsafe {
+            if (pem.isNull() || nOut.isNull() || nOutLen.isNull() || eOut.isNull() || eOutLen.isNull()) { return -1 }
+            if (pemLen < 1) { return -1 }
+            let pemStr = ptrToString(pem, pemLen)
+            let pubKey = parseRsaPublicKeyPkcs1Pem(pemStr)
+            let nBytes = pubKey.modulus.toBytesBE()
+            let eBytes = pubKey.exponent.toBytesBE()
+            let nCapacity = nOutLen.read()
+            let eCapacity = eOutLen.read()
+            if (nCapacity < 0 || eCapacity < 0) { return -1 }
+            if (nBytes.size > nCapacity || eBytes.size > eCapacity) { return -2 }
+            bytesToPtr(nBytes, nOut)
+            nOutLen.write(nBytes.size)
+            bytesToPtr(eBytes, eOut)
+            eOutLen.write(eBytes.size)
+            0
+        }
+    } catch (_: CryptoException) {
+        -3
+    } catch (_: Exception) {
+        -3
     }
 }
 
