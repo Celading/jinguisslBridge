@@ -4,6 +4,8 @@ import std.collection.ArrayList
 import std.fs.File
 import jinguissl_bridge.*
 
+private let TEST_HOST_WWW: String = "www." + "example.com"
+
 main(): Int64 {
     try {
         runBridgeArtifactDemo()
@@ -28,9 +30,9 @@ private func runBridgeArtifactDemo(): Unit {
 }
 
 private func runHttpClientGateAndStartupDemo(): Unit {
-    let serverName = "www.example.com"
-    let rootPem = readText("../../../testdata/x509/policy_root.pem")
-    let intermediatePem = readText("../../../testdata/x509/policy_intermediate.pem")
+    let serverName = TEST_HOST_WWW
+    let rootPem = readText("../../testdata/x509/policy_root.pem")
+    let intermediatePem = readText("../../testdata/x509/policy_intermediate.pem")
     let gates = bridgeListProviderConsumptionGates()
     var gateIndex = -1
     var i = 0
@@ -97,12 +99,12 @@ private func runHttpClientGateAndStartupDemo(): Unit {
 }
 
 private func runHttpClientTlsBridgeSmoke(): Unit {
-    let serverName = "www.example.com"
+    let serverName = TEST_HOST_WWW
     let alpnProtocols = ["h2", "http/1.1"]
-    let leafPem = readText("../../../testdata/x509/policy_leaf.pem")
-    let intermediatePem = readText("../../../testdata/x509/policy_intermediate.pem")
-    let rootPem = readText("../../../testdata/x509/policy_root.pem")
-    let leafKeyPem = readText("../../../testdata/x509/policy_leaf_key_pkcs8.pem")
+    let leafPem = readText("../../testdata/x509/policy_leaf.pem")
+    let intermediatePem = readText("../../testdata/x509/policy_intermediate.pem")
+    let rootPem = readText("../../testdata/x509/policy_root.pem")
+    let leafKeyPem = readText("../../testdata/x509/policy_leaf_key_pkcs8.pem")
     let clientHello = bridgeTls13BuildHttpClientHelloX25519Request(
         BridgeTls13HttpClientHelloX25519Request(
             serverName,

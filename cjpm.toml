@@ -1,16 +1,17 @@
 [package]
   cjc-version = "1.0.0"
-  version = "0.1.0"
+  version = "0.7.6"
   name = "jinguissl_bridge"
   output-type = "dynamic"
   src-dir = "src/jinguissl_bridge"
   compile-option = "-Woff unused"
+  license = "Apache-2.0"
   description = "Dynamic bridge for JinguiSSL contract and core integration"
   include = ["src"]
 
 [dependencies]
-  jinguissl_core = { git = "git@github:Celading/jinguisslCore", branch = "main" }
-  jinguissl_contract = { git = "git@github:Celading/JinguiSSL", branch = "main" }
+  jinguissl_core = { git = "https://gitcode.com/CjKu/JinguiCore.git" }
+  jinguissl = { git = "https://gitcode.com/cinyu/jinguiSSL.git" }
 
 [target.aarch64-apple-darwin]
   compile-option = "--dy-std"
