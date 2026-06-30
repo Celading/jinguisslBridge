@@ -1,6 +1,6 @@
 [package]
   cjc-version = "1.0.0"
-  version = "0.7.5"
+  version = "0.7.6"
   name = "jinguissl_bridge"
   output-type = "dynamic"
   src-dir = "src/jinguissl_bridge"

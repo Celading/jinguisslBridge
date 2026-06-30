@@ -1,5 +1,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Cangjie-JinguiSSL%20Bridge-c96b2c?style=for-the-badge&labelColor=1f2430" alt="JinguiSSL Bridge" />
+  <img src="https://img.shields.io/badge/version-0.7.6-c96b2c?style=for-the-badge&labelColor=1f2430" alt="Version 0.7.6" />
   <img src="https://img.shields.io/badge/package-dynamic-805ad5?style=for-the-badge&labelColor=1f2430" alt="Dynamic Package" />
   <img src="https://img.shields.io/badge/focus-runtime%20bridge-3182ce?style=for-the-badge&labelColor=1f2430" alt="Runtime Bridge" />
   <img src="https://img.shields.io/badge/license-Apache%202.0-1f9d55?style=for-the-badge&labelColor=1f2430" alt="Apache 2.0" />
@@ -32,6 +33,7 @@
 - TLS alert / session ticket / record 级桥接函数
 - HTTP client/server TLS 输入校验与材料准备桥接
 - SSH KEX / transcript / startup helper
+- C ABI wrappers for Ed25519, P-256, RSA, and bridge self-description
 - 内置桥接样例，便于直接验证集成方式
 
 ## 当前分层说明
@@ -92,6 +94,16 @@ main() {
 `examples/external-c-runtime-smoke` 给出了一个最小 C smoke。它验证 `bridge_ffi_init` 的 `-1` / `-2` / `0` 返回码，以及当前九个 Ed25519 / P-256 / RSA C ABI 导出在 null-input 下返回 `-1`。
 
 这条证明目前只覆盖本机 macOS `aarch64` Cangjie `cjnative` 运行时路径；它不声称 Linux、OpenHarmony、HarmonyOS、Windows、托管包消费或不进入 Cangjie runtime 的裸 `dlopen` 调用已经可用。
+
+### RSA public-key C ABI
+
+`rsa_pubkey_from_pkcs8(...)` 是保留的 C ABI 符号名。当前 `0.7.6` 行为为：
+
+- 接受标准 RSA SPKI PEM：`-----BEGIN PUBLIC KEY-----`
+- 保留旧版 PKCS#1 RSA public-key PEM：`-----BEGIN RSA PUBLIC KEY-----`
+- 对非 RSA SPKI 输入返回 `-3`
+
+返回码仍遵守当前 C ABI 约定：`0` 表示成功，`-1` 表示输入错误，`-2` 表示输出缓冲区不足，`-3` 表示解析、密码学或校验失败。
 
 ## 构建
 
