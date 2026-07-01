@@ -39,11 +39,10 @@ clang bridge_runtime_smoke.c \
   -o bridge_runtime_smoke
 ```
 
-If `CANGJIE_HOME` is not exported, use the installed Cangjie version path.
-For the local macOS Cangjie `1.1.0` framework install, that path is usually:
+If `CANGJIE_HOME` is not exported, use the installed Cangjie version path:
 
 ```bash
-export CANGJIE_HOME=/Library/Frameworks/Cangjie/1.1.0
+export CANGJIE_HOME=/path/to/cangjie
 ```
 
 No Cangjie C header is required for this smoke; the runtime entry symbols are
